@@ -4,53 +4,83 @@
 
 function HomeCtrl($scope) {
 
-		$scope.searchWord = "Pancake";
+	$scope.color = "006699";
+     
+	$scope.colors = {};
+	
+	$scope.outfit = {};
+	
+	$scope.colors.color = [];
+	$scope.colors.accents = [];
+	$scope.colors.complements = [];
+	$scope.colors.neutrals = [];
+	
+	var activeColor = {
+		type: null,
+		num: null
+	};
+	
+	var map = {
+		glasses: { type: "complements", num: 0 },
+		earrings: { type: "complements", num: 1 },
+		shirt: { type: "color", num: 0 },
+		jacket: { type: "accents", num: 1 },
+		purse: { type: "complements", num: 1 },
+		skirt: { type: "neutrals", num: 1 },
+		buttons: { type: "complements", num: 0 },
+		boots: { type: "neutrals", num: 0 }
+	};
+	
+	$scope.setOutfit = function () {
+		for (var item in map) {
+			$scope.outfit[item] = $scope.colors[map[item].type][map[item].num];
+		}
+	}
+	
+	$scope.setItem = function (item) {
+		console.log(item);
+		console.log($scope.colors[activeColor.type][activeColor.num]);
 		
-		$scope.colors = [
-			"#666",
-			"#999",
-			"#333"
-		];
+		map[item].type = activeColor.type;
+		map[item].num = activeColor.num;
+
+		$scope.setOutfit();
+	}
+	
+	$scope.activeColor = function (type, num) { 
+		activeColor = {
+			type: type,
+			num: num
+		};
+	}
+
+  	$scope.getColors = function () {
+  		$scope.color = $scope.color.replace("#", "");
 		
-	  	$scope.getColors = function () { 
-		  	var alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		  	var alpha1 = "Jumblingvextfrowzyhacks".toUpperCase();  
+  		if ($scope.color.length) {
+  			var colors = tinycolor($scope.color);
+  			$scope.colors.color = [tinycolor.lighten(colors, 0).toHex(), tinycolor.lighten(colors, 10).toHex(), tinycolor.lighten(colors, 30).toHex() ]
+	  		var triad = tinycolor.triad($scope.color);
+		  	$scope.colors.accents=[triad[0].toHex(), triad[1].toHex(), triad[2].toHex()];
 		  	
-		  	$scope.colors[0] = convertColor($scope.searchWord, alpha);
-		  	$scope.colors[1] = convertColor($scope.searchWord, alpha.split("").reverse().join(""));
-		  	$scope.colors[2] = convertColor($scope.searchWord, alpha1);
+		  	var comp = tinycolor.complement($scope.color);
+		  	var splitComp = tinycolor.splitcomplement($scope.color);
+		  	$scope.colors.complements=[comp.toHex(), splitComp[1].toHex(), splitComp[2].toHex()];
+		  	
+		  	var neutrals = tinycolor.neutral($scope.color);
+		  	$scope.colors.neutrals =[neutrals[0].toHex(), neutrals[1].toHex(), neutrals[2].toHex()];
 	  	}
 	  	
-	  	$scope.getColors();
-	  	
-  }
-  
-  function convertColor(word, alpha) {
-  	  word = word.toUpperCase();
-  	  var wordArray = [];
-  	  var avg = 0;
-  	  
-	  for(var i in word.split("")) {
-		  var letnum = alpha.indexOf(word[i])+1;
-		  wordArray.push(letnum);
-	  }
-	  
-	var sum = wordArray.reduce(function(a, b) { return a + b });
-	var avg = sum / wordArray.length;
-	var ratio = Math.round(16777215*(avg/26));
-	
-	return(ratio.toString(16));
-  }
-  
-  String.prototype.shuffle = function () {
-    var a = this.split(""),
-        n = a.length;
-
-    for(var i = n - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var tmp = a[i];
-        a[i] = a[j];
-        a[j] = tmp;
-    }
-    return a.join("");
-  }
+	  	$scope.setOutfit();
+  	}
+  	
+    $('#colorpicker').farbtastic(function (farbe) { 
+	    farbe = farbe.replace("#", "");
+	    $scope.$apply(function() { 
+	    	$scope.color = farbe;
+	    	$scope.getColors();
+	    });
+    });
+    
+    $scope.$watch("color", function () { $scope.getColors(); });
+}
